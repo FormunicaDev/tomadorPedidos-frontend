@@ -20,6 +20,26 @@
         :search="search"
         hide-default-footer
       >
+        <template v-slot:[`item.Estado`]="{item}">
+          <v-chip
+            small
+            :color="getColor(item.Estado)"
+            dark
+            class="font-weight-medium"
+          >
+            {{ item.Estado }}
+          </v-chip>
+        </template>
+        <template v-slot:[`item.usuarioAs`]="{item}">
+          <v-chip
+            small
+            :color="getColor(item.usuarioAs)"
+            dark
+            class="font-weight-medium"
+          >
+            {{ item.usuarioAs }}
+          </v-chip>
+        </template>
         <template v-slot:[`item.actions`]="{item}">
           <v-icon
             medium
@@ -553,6 +573,8 @@ export default {
       { text: 'Total', value: 'Total' },
       { text: 'Descuento', value: 'TotalDescuento' },
       { text: 'Total Neto', value: 'TotalNeto' },
+      { text: 'Estado', value: 'Estado' },
+      { text: 'Usuario', value: 'usuarioAs' },
       { text: 'Acciones', value: 'actions' },
     ],
     headersDetalle: [
@@ -825,8 +847,8 @@ export default {
       })
     },
     getColor(estado) {
-      if (estado === 'Activo') return '#00838e'
-      if (estado === 'Inactivo') return '#005b9f'
+      if (estado === 'Iniciado') return '#00838e'
+      if (estado === 'Procesado') return '#005b9f'
 
       return '#102027'
     },
