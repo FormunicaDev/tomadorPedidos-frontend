@@ -47,6 +47,12 @@
           >
             {{ icons.mdiClipboardList }}
           </v-icon>
+          <v-icon
+            medium
+            @click="deleteItem(item.IdPedido)"
+          >
+            {{ icons.mdiDelete }}
+          </v-icon>
         </template>
         <template v-slot:top>
           <v-toolbar
@@ -99,33 +105,17 @@
                       <v-row>
                         <v-col
                           cols="12"
-                          sm="3"
-                          md="2"
-                        >
-                          <v-text-field
-                            v-model="pedidoData.codigo"
-                            label="Codigo*"
-                            outlined
-                            dense
-                            :disabled="editedVisible ? '' : disabled"
-                          ></v-text-field>
-                        </v-col>
-                        <v-col
-                          cols="12"
                           sm="5"
                           md="3"
                         >
-                          <v-autocomplete
-                            v-model="pedidoData.vendedor"
-                            small-chips
-                            clearable
+                          <v-text-field
+                            v-model="vendedor"
+                            label="Vendedor"
                             outlined
                             dense
-                            label="Vendedor*"
-                            :items="dataVendedor"
-                            :item-text="concatVendedor"
-                            item-value="cod_vend"
-                          ></v-autocomplete>
+                            disabled
+                          >
+                          </v-text-field>
                         </v-col>
                         <v-col
                           cols="12"
@@ -141,7 +131,8 @@
                             label="Cliente*"
                             :items="dataClientes"
                             :item-text="concatCliente"
-                            item-value="cod_cte"
+                            item-value="CLIENTE"
+                            @input="findCliente()"
                           ></v-autocomplete>
                         </v-col>
                         <v-col
@@ -160,6 +151,36 @@
                             item-text="TipoVenta"
                             item-value="IdTipoVenta"
                           ></v-autocomplete>
+                        </v-col>
+                        <v-col
+                          cols="12"
+                          sm="3"
+                          md="2"
+                        >
+                          <v-autocomplete
+                            v-model="pedidoData.formaPago"
+                            small-chips
+                            clearable
+                            outlined
+                            dense
+                            label="Forma de Pago*"
+                            :items="dataFormaPago"
+                            item-text="FormaPago"
+                            item-value="IdFormaPago"
+                          ></v-autocomplete>
+                        </v-col>
+                        <v-col
+                          cols="12"
+                          md="12"
+                          sm="4"
+                        >
+                          <v-textarea
+                            v-model="direccion"
+                            name="input-7-1"
+                            label="Direccion del Cliente"
+                            auto-grow
+                            outlined
+                          ></v-textarea>
                         </v-col>
                         <v-col
                           cols="12"
@@ -224,6 +245,8 @@
                             dense
                             type="number"
                             min="0"
+                            @keyup="calcularTotal()"
+                            @click="calcularTotal()"
                           >
                           </v-text-field>
                         </v-col>
@@ -234,7 +257,7 @@
                         >
                           <v-text-field
                             v-model="detalle.porcDescuento"
-                            label="% Descuento"
+                            label="Descuento"
                             outlined
                             dense
                             type="number"
@@ -338,7 +361,7 @@
                         </v-col>
                         <v-col
                           cols="12"
-                          sm="3"
+                          sm="2"
                           md="2"
                         >
                           <v-btn
@@ -357,14 +380,6 @@
                             sort-by="calories"
                             class="elevation-1"
                           >
-                            <template v-slot:[`item.actionsProd`]="{ item }">
-                              <v-icon
-                                small
-                                @click="deleteItem(item)"
-                              >
-                                {{ icons.mdiDelete }}
-                              </v-icon>
-                            </template>
                           </v-data-table>
                         </v-col>
                         <v-col cols="12">
@@ -479,6 +494,39 @@
                 </v-card-text>
               </v-card>
             </v-dialog>
+            <v-dialog
+              v-model="dialogDelete"
+              max-width="600px"
+            >
+              <v-card class="rounded-xl">
+                <v-card-title class="text-h5">
+                  ¿Seguro que desea anular este Pedido?
+                </v-card-title>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="blue darken-1"
+                    text
+                    @click="closeDelete"
+                  >
+                    Cancelar
+                  </v-btn>
+                  <v-btn
+                    color="error"
+                    @click="deleteItemConfirm()"
+                  >
+                    OK
+                    <v-spacer v-if="loadDelete"></v-spacer>
+                    <v-progress-circular
+                      v-if="loadDelete"
+                      indeterminate
+                      color="white"
+                    ></v-progress-circular>
+                  </v-btn>
+                  <v-spacer></v-spacer>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
           </v-toolbar>
         </template>
         <template v-slot:[`item.status`]="{item}">
@@ -584,7 +632,7 @@ export default {
         sortable: false,
         value: 'IdDetallePedido',
       },
-      { text: 'Producto', value: 'CodProducto' },
+      { text: 'Producto', value: 'DESCRIPCION' },
       { text: 'Precio', value: 'Precio' },
       { text: 'Cantidad', value: 'Cantidad' },
       { text: 'Descuento', value: 'Descuento' },
@@ -624,6 +672,7 @@ export default {
     vertical: true,
     disabled: false,
     editedVisible: false,
+    loadDelete: false,
     text: '',
     page: 1,
     pageDetalle: 1,
@@ -632,6 +681,7 @@ export default {
     totalPagina: 0,
     totalRegistro: 0,
     totalRegistroDetalle: 0,
+    direccion: '',
     detalle: {
       codArticulo: '',
       cantidad: 0,
@@ -653,8 +703,11 @@ export default {
       cheque: 0,
       fechaCheque: '',
       UsuarioRegistro: '',
+      formaPago: '',
       detallePedido: [],
     },
+    vendedor: '',
+    IdPedido: 0,
 
   }),
   computed: {
@@ -674,6 +727,8 @@ export default {
   },
   methods: {
     comprobarLogin() {
+      this.pedidoData.vendedor = sessionStorage.getItem('cod_vend')
+      this.vendedor = `${sessionStorage.getItem('user')} - ${sessionStorage.getItem('cod_vend')}`
       if (!validateLogin.validateToken()) {
         this.$router.push('/')
       }
@@ -759,6 +814,17 @@ export default {
         console.log(error)
       })
     },
+    async findCliente() {
+      axios.get(`/clientes/${this.pedidoData.cliente}`).then(response => {
+        if (response.data.data[0].DIRECCION === '' || response.data.data[0].DIRECCION === null) {
+          this.direccion = 'Dirección no disponible'
+        } else {
+          this.direccion = response.data.data[0].DIRECCION
+        }
+      }).catch(error => {
+        console.log(error)
+      })
+    },
     getPedidoPagination() {
       this.overlay = true
       const role = sessionStorage.getItem('roleFormunica')
@@ -796,9 +862,18 @@ export default {
       this.loading = true
       this.switch1 = false
 
-      if (this.pedidoData.codigo === 0 || this.pedidoData.vendedor === 0 || this.pedidoData.cliente === 0) {
+      if (this.pedidoData.cliente === '' || this.pedidoData.tipoVenta === 0) {
         this.snackbar = true
         this.text = 'Favor complete todos los campos que sean obligatorios'
+        this.loading = false
+      } else if (this.dataItem === null || this.dataItem === []) {
+        this.snackbar = true
+        this.text = 'Favor agregue al menos un producto'
+        this.loading = false
+      } else if (this.pedidoData.vendedor === null || this.pedidoData.vendedor === '') {
+        this.snackbar = true
+        this.text = 'No tiene un codigo de vendedor asignado'
+        this.loading = false
       } else {
         await axios.post('/pedidos', this.pedidoData).then(response => {
           this.snackbar = true
@@ -839,6 +914,14 @@ export default {
         this.editedIndex = -1
       })
     },
+    deleteItem(IdPedido) {
+      this.dialogDelete = true
+      this.IdPedido = IdPedido
+    },
+    deleteItemConfirm() {
+      this.loadDelete = true
+      this.anularPedido()
+    },
     closeDelete() {
       this.dialogDelete = false
       this.$nextTick(() => {
@@ -849,6 +932,7 @@ export default {
     getColor(estado) {
       if (estado === 'Iniciado') return '#00838e'
       if (estado === 'Procesado') return '#005b9f'
+      if (estado === 'Anulado') return '#990000'
 
       return '#102027'
     },
@@ -859,9 +943,10 @@ export default {
       this.getTipoVenta()
       this.getBancos()
       this.getProductos()
+      this.getFormaPago()
     },
     concatCliente(item) {
-      return `${item.nombres} - ${item.cod_cte}`
+      return `${item.NOMBRE} - ${item.CLIENTE}`
     },
     concatVendedor(item) {
       return `${item.nombres} ${item.apellidos} - ${item.cod_vend}`
@@ -879,6 +964,7 @@ export default {
       this.detalle.totalLempira = total
     },
     calcularDescuento() {
+      // eslint-disable-next-line no-unused-vars
       let subTotal = 0
       // eslint-disable-next-line prefer-destructuring
       const cantidad = this.detalle.cantidad
@@ -888,7 +974,9 @@ export default {
       let totalDescuento = 0
 
       subTotal = cantidad * precio
-      totalDescuento = (subTotal * porcDescuento) / 100
+
+      // totalDescuento = (subTotal * porcDescuento) / 100
+      totalDescuento = cantidad * porcDescuento
 
       this.detalle.totalDesc = totalDescuento
 
@@ -917,6 +1005,19 @@ export default {
       this.detalle.totalLempira = 0
 
       this.dataItem.push(data)
+    },
+    anularPedido() {
+      console.log(this.IdPedido)
+      axios.delete(`/pedidos/${this.IdPedido}`).then(response => {
+        this.snackbar = true
+        this.text = response.data.mensaje
+        this.loadDelete = false
+        this.getPedidos()
+        this.dialogDelete = false
+      }).catch(error => {
+        console.log(error)
+        this.loadDelete = false
+      })
     },
   },
 }

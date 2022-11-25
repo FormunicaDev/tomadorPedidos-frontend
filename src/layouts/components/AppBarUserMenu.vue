@@ -55,7 +55,10 @@
 
       <!-- Profile -->
       <v-list-item link>
-        <v-list-item-icon class="me-2">
+        <v-list-item-icon
+          class="me-2"
+          @click="perfil()"
+        >
           <v-icon size="22">
             {{ icons.mdiAccountOutline }}
           </v-icon>
@@ -69,9 +72,35 @@
 
       <v-divider class="my-2"></v-divider>
 
+      <!-- Settings -->
+      <v-list-item
+        v-if="rol == 110"
+        link
+      >
+        <v-list-item-icon
+          class="me-2"
+          @click="config()"
+        >
+          <v-icon size="22">
+            {{ icons.mdiCogOutline }}
+          </v-icon>
+        </v-list-item-icon>
+        <v-list-item-content>
+          <v-list-item-title @click="config()">
+            Configuración
+          </v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+      <v-divider
+        v-if="rol == 110"
+        class="my-2"
+      ></v-divider>
       <!-- Logout -->
       <v-list-item link>
-        <v-list-item-icon class="me-2">
+        <v-list-item-icon
+          class="me-2"
+          @click="cerrarSesion()"
+        >
           <v-icon size="22">
             {{ icons.mdiLogoutVariant }}
           </v-icon>
@@ -126,10 +155,14 @@ export default {
       sessionStorage.removeItem('tknHonduras')
       sessionStorage.removeItem('user')
       sessionStorage.removeItem('roleFormunica')
+      sessionStorage.removeItem('cod_vend')
       this.$router.push({ name: 'pages-login' })
     },
     perfil() {
       this.$router.push({ name: 'pages-account-settings' })
+    },
+    config() {
+      this.$router.push({ name: 'pages-configuration' })
     },
   },
 }

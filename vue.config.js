@@ -1,11 +1,11 @@
 const { mergeSassVariables } = require('@vuetify/cli-plugin-utils')
 
 module.exports = {
-  publicPath: process.env.NODE_ENV === 'production' ? '/formunica-pedidos/' : '/',
+  publicPath: process.env.NODE_ENV === 'production' ? '/pedidos/' : '/',
   lintOnSave: false,
 
   devServer: {
-    open: process.platform === 'formunica-sec',
+    open: process.platform === 'pedidos',
     https: false,
     port: 8082,
     host: '0.0.0.0',

@@ -32,6 +32,11 @@ const routes = [
     },
   },
   {
+    path: '/pages/configuration',
+    name: 'pages-configuration',
+    component: () => import('@/views/pages/configuration/configuration.vue'),
+  },
+  {
     path: '/error-404',
     name: 'error-404',
     component: () => import('@/views/Error.vue'),

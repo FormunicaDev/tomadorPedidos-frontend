@@ -171,11 +171,11 @@ export default {
         this.text = 'Favor ingrese su contraseña'
       } else {
         axios.post('/login', this.userData).then(response => {
-          console.log(response)
           if (response.data.StatusCode === 404) {
             this.snackbar = true
             this.text = response.data.mensaje
           } else {
+            this.getCodVendedor()
             sessionStorage.setItem('tknHonduras', response.data.token)
             sessionStorage.setItem('user', response.data.user)
             sessionStorage.setItem('roleFormunica', response.data.role)
@@ -187,6 +187,16 @@ export default {
           this.text = error.response
         })
       }
+    },
+    async getCodVendedor() {
+      await axios.get(`/uservendedor?user=${this.userData.usuario}`).then(response => {
+        // eslint-disable-next-line camelcase
+        const { cod_vend } = response.data.data[0]
+        console.log(response.data.data[0].cod_vend)
+        sessionStorage.setItem('cod_vend', cod_vend)
+      }).catch(error => {
+        console.log(error)
+      })
     },
 
   },
