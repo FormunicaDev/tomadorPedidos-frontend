@@ -458,6 +458,26 @@
               </v-card>
             </v-dialog>
             <v-dialog
+              v-model="loading"
+              hide-overlay
+              persistent
+              width="300"
+            >
+              <v-card
+                color="primary"
+                dark
+              >
+                <v-card-text>
+                  Guardando y enviando notificaión por correo, por favor espere...
+                  <v-progress-linear
+                    indeterminate
+                    color="white"
+                    class="mb-0"
+                  ></v-progress-linear>
+                </v-card-text>
+              </v-card>
+            </v-dialog>
+            <v-dialog
               v-model="dialogDetail"
               max-width="1000"
               class="rounded-xl"
@@ -477,16 +497,14 @@
                           :items="dataDetallePedido"
                           class="elevation-3"
                         >
-                          <v-toolbar flat>
-                            <v-toolbar-title>Detalles</v-toolbar-title>
-                            <v-divider
-                              class="mx-4"
-                              inset
-                              vertical
-                            ></v-divider>
-                            <h4>Total de Registros: {{ totalRegistroDetalle }}</h4>
-                            <v-spacer></v-spacer>
-                          </v-toolbar>
+                          <template v-slot:[`item.actDetail`]="{item}">
+                            <v-icon
+                              medium
+                              @click="deleteDetalleItem(item.IdDetallePedido)"
+                            >
+                              {{ icons.mdiDelete }}
+                            </v-icon>
+                          </template>
                         </v-data-table>
                       </v-col>
                     </v-row>
@@ -514,6 +532,39 @@
                   <v-btn
                     color="error"
                     @click="deleteItemConfirm()"
+                  >
+                    OK
+                    <v-spacer v-if="loadDelete"></v-spacer>
+                    <v-progress-circular
+                      v-if="loadDelete"
+                      indeterminate
+                      color="white"
+                    ></v-progress-circular>
+                  </v-btn>
+                  <v-spacer></v-spacer>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+            <v-dialog
+              v-model="dialogDeleteDetalle"
+              max-width="600px"
+            >
+              <v-card class="rounded-xl">
+                <v-card-title class="text-h5">
+                  ¿Seguro que desea eliminar este producto?
+                </v-card-title>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="blue darken-1"
+                    text
+                    @click="closeDelete"
+                  >
+                    Cancelar
+                  </v-btn>
+                  <v-btn
+                    color="error"
+                    @click="deleteDetalleItemConfirm()"
                   >
                     OK
                     <v-spacer v-if="loadDelete"></v-spacer>
@@ -636,6 +687,7 @@ export default {
       { text: 'Precio', value: 'Precio' },
       { text: 'Cantidad', value: 'Cantidad' },
       { text: 'Descuento', value: 'Descuento' },
+      { text: 'Acciones', value: 'actDetail' },
     ],
     headersProd: [
       {
@@ -665,6 +717,7 @@ export default {
     searchSystem: '',
     dialog: false,
     dialogDelete: false,
+    dialogDeleteDetalle: false,
     dialogDetail: false,
     overlay: true,
     snackbar: false,
@@ -708,6 +761,7 @@ export default {
     },
     vendedor: '',
     IdPedido: 0,
+    IdDetallePedido: 0,
 
   }),
   computed: {
@@ -890,6 +944,7 @@ export default {
     async getDetallePedido(IdPedido) {
       this.overlay = false
       this.dialogDetail = true
+      this.IdPedido = IdPedido
       await axios.get(`/detallepedido?IdPedido=${IdPedido}&cantidad=${this.cantidadRegistrosDetalle}&page=${this.pageDetalle}`).then(response => {
         if (response.data.statusCode === 200) {
           this.dataDetallePedido = response.data.items
@@ -918,12 +973,21 @@ export default {
       this.dialogDelete = true
       this.IdPedido = IdPedido
     },
+    deleteDetalleItem(IdDetallePedido) {
+      this.dialogDeleteDetalle = true
+      this.IdDetallePedido = IdDetallePedido
+    },
     deleteItemConfirm() {
       this.loadDelete = true
       this.anularPedido()
     },
+    deleteDetalleItemConfirm() {
+      this.loadDelete = true
+      this.anularDetallePedido()
+    },
     closeDelete() {
       this.dialogDelete = false
+      this.dialogDeleteDetalle = false
       this.$nextTick(() => {
         this.editedItem = { ...this.defaultItem }
         this.editedIndex = -1
@@ -1017,6 +1081,19 @@ export default {
       }).catch(error => {
         console.log(error)
         this.loadDelete = false
+      })
+    },
+    anularDetallePedido() {
+      axios.get(`/detallepedido/${this.IdDetallePedido}`).then(response => {
+        this.snackbar = true
+        this.text = response.data.mensaje
+        this.dialogDeleteDetalle = false
+        this.getDetallePedido(this.IdPedido)
+        this.loadDelete = false
+      }).catch(error => {
+        this.snackbar = true
+        this.loadDelete = false
+        this.text = error
       })
     },
   },
