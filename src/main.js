@@ -7,9 +7,9 @@ import vuetify from './plugins/vuetify'
 import router from './router'
 import store from './store'
 
-// axios.defaults.baseURL = 'http://10.10.0.35:8080/apiPedidos'
+axios.defaults.baseURL = 'http://10.10.0.35:8080/apiPedidos'
 
-axios.defaults.baseURL = 'http://localhost:9000/apiPedidos'
+// axios.defaults.baseURL = 'http://localhost:9000/apiPedidos'
 axios.defaults.headers.common.Authorization = sessionStorage.getItem('tknHonduras')
 
 Vue.config.productionTip = false

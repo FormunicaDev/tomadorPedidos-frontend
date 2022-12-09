@@ -103,7 +103,26 @@
         <!-- social links -->
       </v-card>
     </div>
-
+    <v-dialog
+      v-model="dialog"
+      hide-overlay
+      persistent
+      width="300"
+    >
+      <v-card
+        color="primary"
+        dark
+      >
+        <v-card-text>
+          Iniciando Sesión... Por Favor espere...
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <!-- background triangle shape  -->
     <img
       class="auth-mask-bg"
@@ -158,6 +177,7 @@ export default {
     },
     snackbar: false,
     text: '',
+    dialog: false,
   }),
   created() {
   },
@@ -170,21 +190,29 @@ export default {
         this.snackbar = true
         this.text = 'Favor ingrese su contraseña'
       } else {
+        this.dialog = true
         axios.post('/login', this.userData).then(response => {
           if (response.data.StatusCode === 404) {
             this.snackbar = true
             this.text = response.data.mensaje
+            this.dialog = false
           } else {
             this.getCodVendedor()
             sessionStorage.setItem('tknHonduras', response.data.token)
             sessionStorage.setItem('user', response.data.user)
             sessionStorage.setItem('roleFormunica', response.data.role)
+            sessionStorage.setItem('cod_vend', response.data.cod_vend)
             axios.defaults.headers.common.Authorization = `Bearer ${sessionStorage.tknHonduras}`
-            this.$router.push({ name: 'dashboard' })
+
+            setTimeout(() => {
+              this.dialog = false
+              this.$router.push({ name: 'dashboard' })
+            }, 1000)
           }
         }).catch(error => {
           this.snackbar = true
           this.text = error.response
+          this.dialog = false
         })
       }
     },
