@@ -2,20 +2,16 @@
   "name": "formunica",
   "description": "Production ready carefully crafted most comprehensive admin template",
   "license": "MIT",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": {
-    "name": "Gabriel Espinoza Genet",
-    "url": "https://themeselection.com/"
+    "name": "Gabriel Espinoza Genet"
   },
   "bugs": {
-    "url": "https://github.com/themeselection/materio-vuetify-vuejs-admin-template-free/issues"
   },
   "private": false,
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/themeselection/materio-vuetify-vuejs-admin-template-free"
+    "type": "git"
   },
-  "homepage": "https://themeselection.com/demo/materio-vuetify-vuejs-admin-template-free/demo/",
   "keywords": [
     "Formunica template",
     "vuejs admin"
