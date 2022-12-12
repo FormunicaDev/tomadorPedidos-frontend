@@ -696,7 +696,8 @@ export default {
         sortable: false,
         value: 'item',
       },
-      { text: 'Producto', value: 'codArticulo' },
+      { text: 'Cod.Producto', value: 'codArticulo' },
+      { text: 'Producto', value: 'nom_prod' },
       { text: 'Cantidad', value: 'cantidad' },
       { text: 'Precio', value: 'precioArticulo' },
       { text: 'Descuento', value: 'totalDesc' },
@@ -1047,8 +1048,13 @@ export default {
       // this.detalle.totalLempira = subTotal - totalDescuento
     },
     addProduct() {
+      const productName = this.dataProductos.find(e => e.cod_prod === this.detalle.codArticulo)
+
+      // console.log(productName.nom_prod)
+
       const data = {
         codArticulo: this.detalle.codArticulo,
+        nom_prod: productName.nom_prod,
         cantidad: this.detalle.cantidad,
         porcDescuento: this.detalle.porcDescuento,
         totalLempira: this.detalle.totalLempira,
@@ -1060,7 +1066,7 @@ export default {
 
       this.pedidoData.totalNeto = this.pedidoData.total - this.pedidoData.totalDescuento
 
-      console.log(this.pedidoData)
+      // console.log(this.pedidoData)
 
       this.detalle.cantidad = 0
       this.detalle.porcDescuento = 0
