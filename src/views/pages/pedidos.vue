@@ -288,6 +288,22 @@
                           md="2"
                         >
                           <v-text-field
+                            v-model="totalDescuento"
+                            label="Total con Descuento"
+                            outlined
+                            disabled
+                            dense
+                            type="number"
+                            min="0"
+                          >
+                          </v-text-field>
+                        </v-col>
+                        <v-col
+                          cols="12"
+                          sm="3"
+                          md="2"
+                        >
+                          <v-text-field
                             v-model="detalle.totalDesc"
                             label="Total Descuento"
                             outlined
@@ -361,8 +377,8 @@
                         </v-col>
                         <v-col
                           cols="12"
-                          sm="2"
-                          md="2"
+                          sm="3"
+                          md="3"
                         >
                           <v-btn
                             color="secondary"
@@ -700,7 +716,9 @@ export default {
       { text: 'Producto', value: 'nom_prod' },
       { text: 'Cantidad', value: 'cantidad' },
       { text: 'Precio', value: 'precioArticulo' },
+      { text: 'Subtotal', value: 'subtotal' },
       { text: 'Descuento', value: 'totalDesc' },
+      { text: 'Total', value: 'totalConDescuento' },
       { text: '', value: 'actionsProd' },
     ],
     editedIndex: -1,
@@ -738,8 +756,8 @@ export default {
     direccion: '',
     detalle: {
       codArticulo: '',
-      cantidad: 0,
-      porcDescuento: 0,
+      cantidad: null,
+      porcDescuento: null,
       totalLempira: 0,
       totalDesc: 0,
       precioArticulo: 0,
@@ -749,7 +767,7 @@ export default {
       vendedor: '',
       cliente: '',
       tipoVenta: 0,
-      banco: 0,
+      banco: 5,
       totalDescuento: 0,
       total: 0,
       totalNeto: 0,
@@ -757,12 +775,14 @@ export default {
       cheque: 0,
       fechaCheque: '',
       UsuarioRegistro: '',
-      formaPago: '',
+      formaPago: 4,
+      direccion: '',
       detallePedido: [],
     },
     vendedor: '',
     IdPedido: 0,
     IdDetallePedido: 0,
+    totalDescuento: 0,
 
   }),
   computed: {
@@ -844,6 +864,7 @@ export default {
     async getFormaPago() {
       await axios.get('/formapago').then(response => {
         this.dataFormaPago = response.data.data
+        this.pedidoData.formaPago = response.data.data[3].IdFormaPago
       }).catch(error => {
         console.log(error)
       })
@@ -851,6 +872,8 @@ export default {
     async getBancos() {
       await axios.get('/banco').then(response => {
         this.dataBancos = response.data.data
+        this.pedidoData.banco = response.data.data[4].IdBanco
+        console.log(response.data.data[4].IdBanco)
       }).catch(error => {
         console.log(error)
       })
@@ -917,6 +940,9 @@ export default {
       this.loading = true
       this.switch1 = false
 
+      this.pedidoData.direccion = this.direccion
+      this.pedidoData.comentarios = this.pedidoData.comentarios === '' ? `N/A - ${this.direccion}` : `${this.pedidoData.comentarios} - ${this.direccion}`
+
       if (this.pedidoData.cliente === '' || this.pedidoData.tipoVenta === 0) {
         this.snackbar = true
         this.text = 'Favor complete todos los campos que sean obligatorios'
@@ -935,6 +961,7 @@ export default {
           this.text = response.data.mensaje
           this.loading = false
           this.getPedidos()
+          this.limpiarCampos()
         }).catch(error => {
           this.snackbar = true
           this.text = error
@@ -1009,6 +1036,7 @@ export default {
       this.getBancos()
       this.getProductos()
       this.getFormaPago()
+      this.limpiarCampos()
     },
     concatCliente(item) {
       return `${item.NOMBRE} - ${item.CLIENTE}`
@@ -1044,6 +1072,7 @@ export default {
       totalDescuento = cantidad * porcDescuento
 
       this.detalle.totalDesc = totalDescuento
+      this.totalDescuento = subTotal - totalDescuento
 
       // this.detalle.totalLempira = subTotal - totalDescuento
     },
@@ -1060,6 +1089,8 @@ export default {
         totalLempira: this.detalle.totalLempira,
         totalDesc: this.detalle.totalDesc,
         precioArticulo: this.detalle.precioArticulo,
+        totalConDescuento: this.detalle.totalLempira - this.detalle.totalDesc,
+        subtotal: this.detalle.totalLempira,
       }
       this.pedidoData.total += this.detalle.totalLempira
       this.pedidoData.totalDescuento += this.detalle.totalDesc
@@ -1068,11 +1099,12 @@ export default {
 
       // console.log(this.pedidoData)
 
-      this.detalle.cantidad = 0
-      this.detalle.porcDescuento = 0
+      this.detalle.cantidad = null
+      this.detalle.porcDescuento = null
       this.detalle.totalDesc = 0
       this.detalle.precioArticulo = 0
       this.detalle.totalLempira = 0
+      this.totalDescuento = 0
 
       this.dataItem.push(data)
     },
@@ -1101,6 +1133,20 @@ export default {
         this.loadDelete = false
         this.text = error
       })
+    },
+
+    limpiarCampos() {
+      this.pedidoData.cliente = ''
+      this.pedidoData.tipoVenta = 0
+      this.pedidoData.totalDescuento = 0
+      this.pedidoData.totalNeto = 0
+      this.pedidoData.comentarios = ''
+      this.pedidoData.cheque = 0
+      this.pedidoData.fechaCheque = ''
+      this.pedidoData.detallePedido = []
+      this.dataItem = []
+      this.detalle.codArticulo = ''
+      this.direccion = ''
     },
   },
 }
